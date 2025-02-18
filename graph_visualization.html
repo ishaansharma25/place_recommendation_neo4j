@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User and Place Management</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            max-width: 100%;
+            height: auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .button-container {
+            margin: 200px 350px;
+        }
+
+        .button {
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin-right: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        #addUserButton {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+
+        #addUserButton:hover {
+            background-color: #45a049;
+        }
+
+        #deleteUserButton {
+            background-color: #f44336; /* Red */
+            color: white;
+        }
+
+        #deleteUserButton:hover {
+            background-color: #e53935;
+        }
+
+        #recommendPlacesButton {
+            background-color: #2196F3; /* Blue */
+            color: white;
+        }
+
+        #recommendPlacesButton:hover {
+            background-color: #1976D2;
+        }
+
+        #bulkUploadButton {
+            background-color: #FF9800; /* Orange */
+            color: white;
+        }
+
+        #bulkUploadButton:hover {
+            background-color: #FB8C00;
+        }
+
+        .text-container {
+            margin: 10px 0;
+        }
+
+        .result-text {
+            font-size: 18px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .response-table {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <img src="file:///Users/ishaan/Documents/neo4j-java-crud-main/src/main/resources/PlaceIQLogo.png" alt="Logo" class="logo">
+</div>
+
+<div class="button-container">
+    <button id="addUserButton" class="button">Add User</button>
+    <button id="deleteUserButton" class="button">Delete User</button>
+    <button id="recommendPlacesButton" class="button">Recommend Places</button>
+    <button id="bulkUploadButton" class="button">Bulk Upload from S3</button>
+
+
+<div class="text-container">
+    <p id="responseText" class="result-text"></p>
+</div>
+
+<!-- Table to display recommendations -->
+<div class="response-table">
+    <table id="recommendationTable" style="display:none;">
+        <thead>
+        <tr>
+            <th>Place Name</th>
+            <th>Commonality</th>
+        </tr>
+        </thead>
+        <tbody id="recommendationTableBody">
+        <!-- Data will be populated here -->
+        </tbody>
+    </table>
+</div>
+</div>
+
+<script>
+    // Function to handle the "Add User" button click
+    $('#addUserButton').click(function() {
+        const userName = prompt("Enter the user's name:");
+        if (userName) {
+            const places = prompt("Enter places separated by comma (e.g., 'Azerbaijan, Delhi')");
+            const placesArray = places.split(',').map(place => ({ name: place.trim() }));
+
+            $.ajax({
+                url: 'http://localhost:8080/user',
+                method: 'POST',
+                data: JSON.stringify({ name: userName, places: placesArray }),
+                contentType: 'application/json',
+                success: function(data) {
+                    $('#responseText').text(`User "${userName}" added successfully with places!`);
+                },
+                error: function(error) {
+                    $('#responseText').text('Error adding user. Please try again.');
+                }
+            });
+        }
+    });
+
+    // Function to handle the "Delete User" button click
+    $('#deleteUserButton').click(function() {
+        const userId = prompt("Enter the user ID to delete:");
+        if (userId) {
+            $.ajax({
+                url: `http://localhost:8080/user/${userId}`,
+                method: 'DELETE',
+                contentType: 'application/json',
+                success: function(data) {
+                    $('#responseText').text(`User with ID ${userId} deleted successfully!`);
+                },
+                error: function(error) {
+                    $('#responseText').text('Error deleting user. Please try again.');
+                }
+            });
+        }
+    });
+
+    // Function to handle the "Recommend Places" button click
+    $('#recommendPlacesButton').click(function() {
+        const userId = prompt("Enter the username for recommendations:");
+        $.ajax({
+            url: `http://localhost:8080/user/recommendation/${userId}`,
+            method: 'GET',
+            success: function(data) {
+                // Clear previous recommendations
+                $('#recommendationTableBody').empty();
+                $('#recommendationTable').show();
+
+                // Check if the response has places
+                if (data && Array.isArray(data) && data.length > 0) {
+                    data.forEach(place => {
+                        const row = `<tr>
+                                <td>${place.place.name}</td>
+                                <td>${place.commonality}</td>
+                            </tr>`;
+                        $('#recommendationTableBody').append(row);
+                    });
+                    $('#responseText').text(`Below are the Recommendations for the user: ${userId}`);
+                } else {
+                    $('#responseText').text('No recommendations found for the user.');
+                }
+            },
+            error: function(error) {
+                $('#responseText').text('Error fetching recommendations. Please try again.');
+            }
+        });
+    });
+
+    // Function to handle the "Bulk Upload from S3" button click
+    $('#bulkUploadButton').click(function() {
+        $.ajax({
+            url: 'http://localhost:8080/user/addBulkUsersFromS3',
+            method: 'POST',
+            contentType: 'application/json',
+            success: function(data) {
+                $('#responseText').text('Bulk upload from S3 completed successfully!');
+            },
+            error: function(error) {
+                $('#responseText').text('Error during bulk upload. Please try again.');
+            }
+        });
+    });
+</script>
+</body>
+</html>

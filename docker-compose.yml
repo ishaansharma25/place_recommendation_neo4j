@@ -1,0 +1,32 @@
+services:
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j_new
+    environment:
+      - NEO4J_AUTH=neo4j/ishaansharma  # Credentials for Neo4j
+    ports:
+      - "7474:7474"  # HTTP port for Neo4j Web Interface (accessible from localhost)
+      - "7687:7687"  # Bolt protocol for Neo4j (accessible from localhost)
+    networks:
+      - mynetwork
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7474/browser/"]  # Check if Neo4j web interface is up
+      interval: 30s  # Interval between checks
+      retries: 10  # Retry up to 10 times before considering it unhealthy
+      start_period: 60s  # Wait 60 seconds before starting health checks
+      timeout: 10s  # Timeout for each health check
+
+  springboot-app:
+    image: neo4j-java-crud  # Your Spring Boot app image
+    container_name: neo4j-java-crud
+    ports:
+      - "8080:8080"  # Expose Spring Boot port
+    environment:
+      - SPRING_DATA_NEO4J_URI=bolt://localhost:7687  # Use localhost for Neo4j connection
+    networks:
+      - mynetwork
+    command: ["sh", "-c", "sleep 15 && java -jar /path/to/your/app.jar"]  # Delay Spring Boot startup by 15 seconds
+
+networks:
+  mynetwork:
+    driver: bridge
