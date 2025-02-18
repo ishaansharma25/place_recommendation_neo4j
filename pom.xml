@@ -62,10 +62,6 @@
 		<!-- DJL TensorFlow Engine (for TensorFlow models) -->
 		<!-- DJL TensorFlow Engine (try an earlier stable version 0.14.0) -->
 		<!-- Spring AI (for ML model integration support) -->
-		<dependency>
-			<groupId>org.springframework.ai</groupId>
-			<artifactId>spring-ai-huggingface-spring-boot-starter</artifactId>
-		</dependency>
 
 	</dependencies>
 
