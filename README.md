@@ -57,7 +57,8 @@ o	Alternatively, right-click the file and select Open With to choose a specific 
 
 
 
- 
+ <img width="468" alt="image" src="https://github.com/user-attachments/assets/3024a068-e98a-4e2e-87d7-8746b4eb279b" />
+
 
 
 
@@ -71,8 +72,3 @@ Troubleshooting
 •	If you encounter issues, check the Docker logs for detailed error messages.
 •	Ensure that your Docker daemon is running.
 Thank you for setting up PlaceIQ! For further assistance, feel free to reach out or check the project documentation.
-
-
-
-
-![image](https://github.com/user-attachments/assets/6cacb93b-c374-4de4-8ea8-7969f206edfc)
